@@ -1,0 +1,34 @@
+{
+  "name": "fritz-lib",
+  "version": "1.0.0",
+  "description": "Utility Library for fritzbox routers",
+  "main": "index.js",
+  "scripts": {
+    "debug": "inspect bin/index.js"
+  },
+  "author": "Felix Kaminski",
+  "license": "MIT",
+  "dependencies": {
+    "eventemitter3": "^2.0.3",
+    "lodash": "^4.17.4",
+    "minimist": "^1.2.0",
+    "node-fetch": "^1.7.1",
+    "xml2js": "^0.4.17"
+  },
+  "devDependencies": {
+    "eslint": "^3.19.0",
+    "eslint-config-airbnb": "^15.1.0",
+    "eslint-plugin-import": "^2.7.0",
+    "eslint-plugin-jsx-a11y": "^5.1.1",
+    "eslint-plugin-promise": "^3.5.0",
+    "eslint-plugin-react": "^7.1.0",
+    "inspect-process": "^0.5.0"
+  },
+  "bin": {
+    "fritz": "bin/index.js"
+  },
+  "devEngines": {
+    "node": ">=8.x",
+    "npm": ">=5.x"
+  }
+}
