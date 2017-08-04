@@ -4,6 +4,7 @@ const Eventemitter = require('eventemitter3');
 
 const { fetchText, interpolateDataPoint } = require('./utils');
 const { EVENTS, DEFAULT_OPTS } = require('./constants');
+const { GraphFetchError, GraphParseError } = require('./common');
 
 const TRANSFORMS = {
   upstream: {
@@ -146,8 +147,8 @@ module.exports = class Graph extends Eventemitter {
     try {
       response = await fetchText(this.bandwidthURL(dateNow));
     } catch (e) {
-      this.emit(EVENTS.AUTHENTICATED, { error: e }); // intermediate emit, then re-throw
-      throw e;
+      this.emit(EVENTS.ERROR, { error: e }); // intermediate emit, then re-throw
+      throw new GraphFetchError('Error while fetching graph-data', e);
     }
     try {
       const parsedResponse = JSON.parse(response)[0];
@@ -158,7 +159,7 @@ module.exports = class Graph extends Eventemitter {
       return formattedResponse;
     } catch (e) {
       this.emit(EVENTS.ERROR, { error: e }); // intermediate emit, then re-throw
-      throw e;
+      throw new GraphParseError('Error while parsing graph-data', e);
     }
   }
 };

@@ -23,3 +23,21 @@ exports.AuthTriesExceedError = class AuthTriesExceedError extends Error {
     this.lastError = lastError;
   }
 };
+
+exports.GraphFetchError = class GraphFetchError extends Error {
+  constructor(message, error) {
+    super(message);
+    this.message = message;
+    this.name = 'GraphFetchError';
+    this.error = error;
+  }
+};
+
+exports.GraphParseError = class GraphParseError extends Error {
+  constructor(message, error) {
+    super(message);
+    this.message = message;
+    this.name = 'GraphParseError';
+    this.error = error;
+  }
+};

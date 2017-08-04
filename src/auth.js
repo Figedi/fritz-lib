@@ -1,15 +1,17 @@
+/* eslint-disable no-await-in-loop */
 const { merge } = require('lodash');
 const crypto = require('crypto');
 
-const { DEFAULT_OPTS } = require('./constants');
-const { fetchText, promiseParseString } = require('./utils');
-const { SIDError, ChallengeError } = require('./common');
+const { DEFAULT_OPTS, MAX_AUTH_TRIES } = require('./constants');
+const { fetchText, promiseParseString, sleep } = require('./utils');
+const { SIDError, ChallengeError, AuthTriesExceedError } = require('./common');
 
 module.exports = class Auth {
   constructor(opts = {}) {
     this.opts = merge({}, DEFAULT_OPTS, opts);
     this.token = null;
     this.tokenAt = null;
+    this.authTries = 0;
   }
 
   /**
@@ -19,7 +21,7 @@ module.exports = class Auth {
    *
    * @return {Async}             Async Response, returns Promise
    */
-  async authenticate() {
+  async doAuth() {
     if (this.tokenValid()) {
       return this.token;
     }
@@ -32,6 +34,30 @@ module.exports = class Auth {
     this.token = await this.getToken(challengeResponse);
     this.tokenAt = +new Date();
     return this.token;
+  }
+
+  /**
+   *
+   * Public fn which tries to authenticate the user, retries *n*-times
+   *
+   * @return {Async}             Returns the token when successfull
+   */
+  async authenticate() {
+    let lastError;
+    while (this.authTries < MAX_AUTH_TRIES) {
+      try {
+        return this.doAuth();
+      } catch (e) {
+        lastError = e;
+        if (e instanceof SIDError) {
+          console.warn(`There was an SID-Error, however we have to sleep for another ${e.blockTime} seconds 💤`);
+          await sleep(e.blockTime * 1000); // blocktime is in s, not ms
+          console.info('Continuing with connection retry');
+        }
+      }
+    }
+    const error = new AuthTriesExceedError(`Auth tries of ${MAX_AUTH_TRIES} exceeded`, lastError);
+    throw error;
   }
 
   /**

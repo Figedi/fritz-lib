@@ -18,7 +18,7 @@
         "exports": "always-multiline",
         "functions": "never"
     }],
-    "no-console": [2, { allow: ["warn", "error"] }],
+    "no-console": [2, { allow: ["warn", "error", "info"] }],
     "class-methods-use-this": 0,
   },
   "plugins": [
