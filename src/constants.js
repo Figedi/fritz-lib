@@ -1,16 +1,13 @@
+// common constants for eventemitter
 exports.EVENTS = {
-  AUTHENTICATE: 'AUTHENTICATE',
-  UNAUTHENTICATED: 'UNAUTHENTICATED',
   ERROR: 'ERROR',
-  NETWORK_ERROR: 'NETWORK_ERROR',
-  GRAPH_DATA: 'GRAPH_DATA',
-  READY: 'READY',
+  DATA: 'DATA',
 };
 
+// auth constants
+
 exports.MAX_AUTH_TRIES = 2;
-
-exports.DEFAULT_INTERVAL = 5000;
-
+exports.TOKEN_VALIDITY = 200000;
 exports.DEFAULT_OPTS = {
   credentials: {
     base: 'http://fritz.box',
@@ -19,3 +16,7 @@ exports.DEFAULT_OPTS = {
     password: 'admin',
   },
 };
+
+// graph constants
+
+exports.DEFAULT_INTERVAL = 5000;

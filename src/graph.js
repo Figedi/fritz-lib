@@ -155,7 +155,7 @@ module.exports = class Graph extends Eventemitter {
       const normalizedResponse = this.normalize(parsedResponse);
       const formattedResponse = this.format(dateNow, normalizedResponse);
 
-      this.emit(EVENTS.GRAPH_DATA, { response: formattedResponse }); // intermediate emit, then re-throw
+      this.emit(EVENTS.DATA, { response: formattedResponse }); // intermediate emit, then re-throw
       return formattedResponse;
     } catch (e) {
       this.emit(EVENTS.ERROR, { error: e }); // intermediate emit, then re-throw

@@ -2,7 +2,7 @@
 const { merge } = require('lodash');
 const crypto = require('crypto');
 
-const { DEFAULT_OPTS, MAX_AUTH_TRIES } = require('./constants');
+const { DEFAULT_OPTS, MAX_AUTH_TRIES, TOKEN_VALIDITY } = require('./constants');
 const { fetchText, promiseParseString, sleep } = require('./utils');
 const { SIDError, ChallengeError, AuthTriesExceedError } = require('./common');
 
@@ -68,7 +68,7 @@ module.exports = class Auth {
    */
   tokenValid() {
     const now = +new Date();
-    if (this.token && this.tokenAt && now - this.tokenAt < 200000) {
+    if (this.token && this.tokenAt && now - this.tokenAt < TOKEN_VALIDITY) {
       return true;
     }
     // invalidate, then return
@@ -89,7 +89,7 @@ module.exports = class Auth {
     const { credentials: { password } } = this.opts;
     // fritzbox requires your challenge to be an UTF-16LE string, md5 hashed
     const md5 = crypto.createHash('md5');
-    md5.update(`${challenge}-${password}`, 'ucs2'); // 16 - Unicode
+    md5.update(`${challenge}-${password}`, 'ucs2'); // ucs2 = UTF-16LE
     const digest = md5.digest('hex');
     return `${challenge}-${digest}`;
   }
