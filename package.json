@@ -1,8 +1,8 @@
 {
   "name": "fritz-lib",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Utility Library for fritzbox routers",
-  "main": "index.js",
+  "main": "src/index.js",
   "scripts": {
     "debug": "inspect bin/index.js"
   },
