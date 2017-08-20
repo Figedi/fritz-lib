@@ -1,7 +1,6 @@
 /* eslint-disable no-mixed-operators */
 const { reduce, range } = require('lodash');
 const fetch = require('node-fetch');
-const { promisify } = require('util');
 const { parseString } = require('xml2js');
 
 // ======================== graph/set utils ====================================
@@ -68,7 +67,11 @@ exports.interpolateDataPoint = interpolateDataPoint;
 // ========================== auth utils =======================================
 
 exports.fetchText = (...args) => fetch(...args).then(response => response.text());
-exports.promiseParseString = promisify(parseString);
+exports.promiseParseString = (...args) =>
+  new Promise((resolve, reject) => {
+    const argv = [...args, (err, result) => (err ? reject(err) : resolve(result))];
+    return parseString(argv);
+  });
 
 // ================================ other utils ================================
 
