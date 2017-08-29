@@ -106,7 +106,9 @@ module.exports = class Auth {
    * @return {Promise}           Async response, returning Promise
    */
   async getToken(xml) {
-    debugger;
+    if (!xml || !xml.length) {
+      throw new Error('XML-Token-Response is empty');
+    }
     const match = xml.trim().match(SID_REGEX);
     if (match) {
       const [, token] = match;
@@ -127,7 +129,9 @@ module.exports = class Auth {
    * @return {Promise}             Async response, returning Promise
    */
   async getChallenge(xml) {
-    debugger;
+    if (!xml || !xml.length) {
+      throw new Error('XML-Challenge-Response is empty');
+    }
     const match = xml.trim().match(CHALLENGE_REGEX);
     if (match) {
       return match[1];
