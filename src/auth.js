@@ -3,8 +3,12 @@ const { merge } = require('lodash');
 const crypto = require('crypto');
 
 const { DEFAULT_OPTS, MAX_AUTH_TRIES, TOKEN_VALIDITY } = require('./constants');
-const { fetchText, promiseParseString, sleep } = require('./utils');
+const { fetchText, sleep } = require('./utils');
 const { SIDError, ChallengeError, AuthTriesExceedError } = require('./common');
+
+const CHALLENGE_REGEX = /<Challenge[^>]*>(.+?)<\/Challenge>/;
+const BLOCKTIME_REGEX = /<BlockTime[^>]*>(.+?)<\/BlockTime>/;
+const SID_REGEX = /<SID[^>]*>(.+?)<\/SID>/;
 
 module.exports = class Auth {
   constructor(opts = {}) {
@@ -102,12 +106,17 @@ module.exports = class Auth {
    * @return {Promise}           Async response, returning Promise
    */
   async getToken(xml) {
-    const result = await promiseParseString(xml);
-    const token = result.SessionInfo.SID[0];
-    if (token && token !== '0000000000000000') {
+    debugger;
+    const match = xml.trim().match(SID_REGEX);
+    if (match) {
+      const [, token] = match;
+      if (token === '0000000000000000') {
+        const [, blockTime] = xml.trim().match(BLOCKTIME_REGEX);
+        throw new SIDError(`No SID created, was: ${token}`, +blockTime);
+      }
       return token;
     }
-    throw new SIDError(`No SID created, was: ${token}`, +result.SessionInfo.BlockTime[0]);
+    throw new Error('Unknown error during parsing occured');
   }
 
   /**
@@ -118,10 +127,10 @@ module.exports = class Auth {
    * @return {Promise}             Async response, returning Promise
    */
   async getChallenge(xml) {
-    const result = await promiseParseString(xml);
-    const challenge = result.SessionInfo.Challenge;
-    if (challenge) {
-      return challenge[0]; // is always an array with one element
+    debugger;
+    const match = xml.trim().match(CHALLENGE_REGEX);
+    if (match) {
+      return match[1];
     }
     throw new ChallengeError('No challenge found');
   }
