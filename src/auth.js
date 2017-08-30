@@ -60,8 +60,7 @@ module.exports = class Auth {
         }
       }
     }
-    const error = new AuthTriesExceedError(`Auth tries of ${MAX_AUTH_TRIES} exceeded`, lastError);
-    throw error;
+    throw new AuthTriesExceedError(`Auth tries of ${MAX_AUTH_TRIES} exceeded`, lastError);
   }
 
   /**

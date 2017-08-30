@@ -4,7 +4,7 @@ const Eventemitter = require('eventemitter3');
 
 const { fetchText, interpolateDataPoint } = require('./utils');
 const { EVENTS, DEFAULT_OPTS } = require('./constants');
-const { GraphFetchError, GraphParseError } = require('./common');
+const { GraphFetchError, GraphParseError, UnauthorizedError } = require('./common');
 
 const TRANSFORMS = {
   upstream: {
@@ -147,6 +147,9 @@ module.exports = class Graph extends Eventemitter {
     try {
       response = await fetchText(this.bandwidthURL(dateNow));
     } catch (e) {
+      if (e instanceof UnauthorizedError) {
+        throw e;
+      }
       this.emit(EVENTS.ERROR, { error: e }); // intermediate emit, then re-throw
       throw new GraphFetchError('Error while fetching graph-data', e);
     }
@@ -155,7 +158,7 @@ module.exports = class Graph extends Eventemitter {
       const normalizedResponse = this.normalize(parsedResponse);
       const formattedResponse = this.format(dateNow, normalizedResponse);
 
-      this.emit(EVENTS.DATA, { response: formattedResponse }); // intermediate emit, then re-throw
+      this.emit(EVENTS.DATA, { response: formattedResponse }); // intermediate emit, then return
       return formattedResponse;
     } catch (e) {
       this.emit(EVENTS.ERROR, { error: e }); // intermediate emit, then re-throw

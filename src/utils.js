@@ -1,6 +1,7 @@
 /* eslint-disable no-mixed-operators */
 const { reduce, range } = require('lodash');
 const fetch = require('node-fetch');
+const { UnauthorizedError } = require('./common');
 
 // ======================== graph/set utils ====================================
 
@@ -65,7 +66,13 @@ exports.interpolateDataPoint = interpolateDataPoint;
 
 // ========================== auth utils =======================================
 
-exports.fetchText = (...args) => fetch(...args).then(response => response.text());
+exports.fetchText = (...args) =>
+  fetch(...args).then(response => {
+    if (response.status === 403) {
+      throw new UnauthorizedError('Unauthorized');
+    }
+    return response.text();
+  });
 
 // ================================ other utils ================================
 

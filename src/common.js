@@ -33,6 +33,14 @@ exports.GraphFetchError = class GraphFetchError extends Error {
   }
 };
 
+exports.UnauthorizedError = class UnauthorizedError extends Error {
+  constructor(message) {
+    super(message);
+    this.message = message;
+    this.name = 'UnauthorizedError';
+  }
+};
+
 exports.GraphParseError = class GraphParseError extends Error {
   constructor(message, error) {
     super(message);
