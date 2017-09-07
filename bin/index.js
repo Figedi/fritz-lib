@@ -9,15 +9,14 @@ const { DEFAULT_INTERVAL } = require('../src/constants');
 
 const args = parseArgs(process.argv.slice(2));
 
-function doAuth() {
-  const auth = new Auth({
+function createAuthOpts() {
+  return {
     credentials: {
+      base: args.ip,
       username: args.username,
       password: args.password,
     },
-  });
-
-  return auth.authenticate();
+  };
 }
 
 function run() {
@@ -46,15 +45,18 @@ if (args.interval) {
 }
 
 async function execCmd() {
+  const authOpts = createAuthOpts();
   if (args['get-token']) {
-    return doAuth();
+    const tokenObj = await new Auth(authOpts).authenticate();
+    return tokenObj.token;
   } else if (args['get-graph']) {
-    let token = args.token;
-    if (!token) {
-      token = await doAuth();
+    let auth;
+    if (args.token) {
+      auth = Auth.byToken(authOpts, args.token, args.tokenAt);
+    } else {
+      auth = await new Auth(authOpts);
     }
-    const graph = new Graph(token);
-    return graph.getGraph();
+    return new Graph(auth).getGraph();
   }
   throw new Error("I don't know what to do with your arguments, beep boop 🤔");
 }

@@ -11,23 +11,29 @@ const BLOCKTIME_REGEX = /<BlockTime[^>]*>(.+?)<\/BlockTime>/;
 const SID_REGEX = /<SID[^>]*>(.+?)<\/SID>/;
 
 module.exports = class Auth {
-  constructor(opts = {}) {
+  static byToken(opts, token, tokenAt) {
+    const authOpts = merge({}, opts, { skipValidity: !tokenAt });
+    return new Auth(authOpts, token, tokenAt);
+  }
+
+  constructor(opts = {}, token = null, tokenAt = null) {
     this.opts = merge({}, DEFAULT_OPTS, opts);
-    this.token = null;
-    this.tokenAt = null;
+    this.token = token;
+    this.tokenAt = tokenAt;
     this.authTries = 0;
   }
 
   /**
    *
    * Authenticates to the Fritz Router according to spec. (Challenge -> Response
-   * -> SID)
+   * -> SID). Returns the token when its either still valid or a new one was
+   * successfully fetched.
    *
-   * @return {Async}             Async Response, returns Promise
+   * @return {Async}             Returns the token.
    */
   async doAuth() {
     if (this.tokenValid()) {
-      return this.token;
+      return { token: this.token, tokenAt: this.tokenAt };
     }
     const { credentials: { username, base, login } } = this.opts;
     const initialResponse = await fetchText(`${base}${login}`);
@@ -35,9 +41,25 @@ module.exports = class Auth {
     const encodedChallenge = await this.encodeResponse(challenge);
     const challengeResponse = await fetchText(`${base}${login}?username=${username}&response=${encodedChallenge}`);
 
-    this.token = await this.getToken(challengeResponse);
+    this.token = await this.getTokenFromResponse(challengeResponse);
     this.tokenAt = +new Date();
-    return this.token;
+    return { token: this.token, tokenAt: this.tokenAt };
+  }
+
+  /**
+   * Shorthand getter for token, can return the token directly or the full
+   * token-Object containing the validity
+   *
+   * @method getToken
+   * @param  {String}  [attribute] Optional attribute to get (e.g. only the token)
+   * @return {any}                 Returns either the full object or the attribute's value
+   */
+  async getToken(attribute) {
+    const tokenObj = await this.doAuth();
+    if (!attribute) {
+      return tokenObj;
+    }
+    return tokenObj[attribute];
   }
 
   /**
@@ -50,7 +72,7 @@ module.exports = class Auth {
     let lastError;
     while (this.authTries < MAX_AUTH_TRIES) {
       try {
-        return this.doAuth();
+        return this.getToken();
       } catch (e) {
         lastError = e;
         if (e instanceof SIDError) {
@@ -71,7 +93,7 @@ module.exports = class Auth {
    */
   tokenValid() {
     const now = +new Date();
-    if (this.token && this.tokenAt && now - this.tokenAt < TOKEN_VALIDITY) {
+    if (this.opts.skipValidity || (this.token && this.tokenAt && now - this.tokenAt < TOKEN_VALIDITY)) {
       return true;
     }
     // invalidate, then return
@@ -104,7 +126,7 @@ module.exports = class Auth {
    *
    * @return {Promise}           Async response, returning Promise
    */
-  async getToken(xml) {
+  async getTokenFromResponse(xml) {
     if (!xml || !xml.length) {
       throw new Error('XML-Token-Response is empty');
     }

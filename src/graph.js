@@ -4,7 +4,7 @@ const Eventemitter = require('eventemitter3');
 
 const { fetchText, interpolateDataPoint } = require('./utils');
 const { EVENTS, DEFAULT_OPTS } = require('./constants');
-const { GraphFetchError, GraphParseError, UnauthorizedError } = require('./common');
+const { GraphFetchError, GraphParseError, UnauthorizedError, SIDError } = require('./common');
 
 const TRANSFORMS = {
   upstream: {
@@ -20,11 +20,11 @@ const TRANSFORMS = {
 };
 
 module.exports = class Graph extends Eventemitter {
-  constructor(token, opts = {}) {
+  constructor(auth, opts = {}) {
     super();
     this.lastCall = {};
-    this.token = token;
-    this.opts = merge({}, DEFAULT_OPTS, opts);
+    this.auth = auth;
+    this.opts = merge({}, DEFAULT_OPTS, auth.opts, opts);
   }
 
   /**
@@ -82,10 +82,9 @@ module.exports = class Graph extends Eventemitter {
     return Object.keys(data).reduce((acc, key) => acc + data[key][data[key].length - 1], 0.0).toFixed(3);
   }
 
-  bandwidthURL(dateNow) {
+  bandwidthURL(dateNow, token) {
     const { credentials: { base } } = this.opts;
-    return `${base}/internet/inetstat_monitor.lua?sid=${this
-      .token}&useajax=1&action=get_graphic&xhr=1&t${dateNow}=nocache`;
+    return `${base}/internet/inetstat_monitor.lua?sid=${token}&useajax=1&action=get_graphic&xhr=1&t${dateNow}=nocache`;
   }
 
   normalize(parsedData) {
@@ -145,12 +144,19 @@ module.exports = class Graph extends Eventemitter {
     const dateNow = +new Date();
     let response;
     try {
-      response = await fetchText(this.bandwidthURL(dateNow));
+      const token = await this.auth.getToken('token');
+      response = await fetchText(this.bandwidthURL(dateNow, token));
     } catch (e) {
+      this.emit(EVENTS.ERROR, { error: e }); // intermediate emit, then re-throw
       if (e instanceof UnauthorizedError) {
         throw e;
+        // when there is a SIDError while getting graph-data, the user
+        // authenticated by password. For clarity we also return an UnauthorizedError
+        // here and ignore the SIDError (in this context, the errors are semantically
+        // the same)
+      } else if (e instanceof SIDError) {
+        throw new UnauthorizedError('Unauthorized');
       }
-      this.emit(EVENTS.ERROR, { error: e }); // intermediate emit, then re-throw
       throw new GraphFetchError('Error while fetching graph-data', e);
     }
     try {
