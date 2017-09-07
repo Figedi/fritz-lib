@@ -66,13 +66,16 @@ exports.interpolateDataPoint = interpolateDataPoint;
 
 // ========================== auth utils =======================================
 
-exports.fetchText = (...args) =>
+const baseFetch = (...args) =>
   fetch(...args).then(response => {
     if (response.status === 403) {
       throw new UnauthorizedError('Unauthorized');
     }
-    return response.text();
+    return response;
   });
+
+exports.fetchText = (...args) => baseFetch(...args).then(response => response.text());
+exports.fetchJSON = (...args) => baseFetch(...args).then(response => response.json());
 
 // ================================ other utils ================================
 

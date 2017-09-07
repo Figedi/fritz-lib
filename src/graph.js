@@ -3,7 +3,7 @@ const { merge, range, chain } = require('lodash');
 const Eventemitter = require('eventemitter3');
 
 const { fetchText, interpolateDataPoint } = require('./utils');
-const { EVENTS, DEFAULT_OPTS } = require('./constants');
+const { EVENTS, KINDS, DEFAULT_OPTS } = require('./constants');
 const { GraphFetchError, GraphParseError, UnauthorizedError, SIDError } = require('./common');
 
 const TRANSFORMS = {
@@ -147,7 +147,8 @@ module.exports = class Graph extends Eventemitter {
       const token = await this.auth.getToken('token');
       response = await fetchText(this.bandwidthURL(dateNow, token));
     } catch (e) {
-      this.emit(EVENTS.ERROR, { error: e }); // intermediate emit, then re-throw
+      // intermediate emit, then re-throw
+      this.emit(EVENTS.ERROR, { kind: KINDS.GRAPH, error: e });
       if (e instanceof UnauthorizedError) {
         throw e;
         // when there is a SIDError while getting graph-data, the user
@@ -164,10 +165,10 @@ module.exports = class Graph extends Eventemitter {
       const normalizedResponse = this.normalize(parsedResponse);
       const formattedResponse = this.format(dateNow, normalizedResponse);
 
-      this.emit(EVENTS.DATA, { response: formattedResponse }); // intermediate emit, then return
+      this.emit(EVENTS.DATA, { kind: KINDS.GRAPH, response: formattedResponse }); // intermediate emit, then return
       return formattedResponse;
     } catch (e) {
-      this.emit(EVENTS.ERROR, { error: e }); // intermediate emit, then re-throw
+      this.emit(EVENTS.ERROR, { kind: KINDS.GRAPH, error: e }); // intermediate emit, then re-throw
       throw new GraphParseError('Error while parsing graph-data', e);
     }
   }

@@ -1,3 +1,4 @@
+// ============================ Auth Errors ====================================
 exports.SIDError = class SIDError extends Error {
   constructor(message, blockTime) {
     super(message);
@@ -24,6 +25,16 @@ exports.AuthTriesExceedError = class AuthTriesExceedError extends Error {
   }
 };
 
+exports.UnauthorizedError = class UnauthorizedError extends Error {
+  constructor(message) {
+    super(message);
+    this.message = message;
+    this.name = 'UnauthorizedError';
+  }
+};
+
+// ============================ Graph Errors ====================================
+
 exports.GraphFetchError = class GraphFetchError extends Error {
   constructor(message, error) {
     super(message);
@@ -33,19 +44,22 @@ exports.GraphFetchError = class GraphFetchError extends Error {
   }
 };
 
-exports.UnauthorizedError = class UnauthorizedError extends Error {
-  constructor(message) {
-    super(message);
-    this.message = message;
-    this.name = 'UnauthorizedError';
-  }
-};
-
 exports.GraphParseError = class GraphParseError extends Error {
   constructor(message, error) {
     super(message);
     this.message = message;
     this.name = 'GraphParseError';
+    this.error = error;
+  }
+};
+
+// ============================ Info Errors ====================================
+
+exports.FritzInfoError = class FritzInfoError extends Error {
+  constructor(message, error) {
+    super(message);
+    this.message = message;
+    this.name = 'FritzInfoError';
     this.error = error;
   }
 };

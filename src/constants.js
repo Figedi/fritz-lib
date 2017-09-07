@@ -4,6 +4,12 @@ exports.EVENTS = {
   DATA: 'DATA',
 };
 
+exports.KINDS = {
+  GRAPH: 'GRAPH',
+  INFO: 'INFO',
+  TOKEN: 'TOKEN',
+};
+
 // auth constants
 
 exports.MAX_AUTH_TRIES = 2;

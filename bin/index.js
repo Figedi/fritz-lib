@@ -4,7 +4,7 @@
 const parseArgs = require('minimist');
 const { isNumber } = require('lodash');
 
-const { Auth, Graph } = require('../src');
+const { Auth, Graph, Info } = require('../src');
 const { DEFAULT_INTERVAL } = require('../src/constants');
 
 const args = parseArgs(process.argv.slice(2));
@@ -17,6 +17,14 @@ function createAuthOpts() {
       password: args.password,
     },
   };
+}
+
+function getAuth() {
+  const authOpts = createAuthOpts();
+  if (args.token) {
+    return Auth.byToken(authOpts, args.token, args.tokenAt);
+  }
+  return new Auth(authOpts);
 }
 
 function run() {
@@ -45,18 +53,14 @@ if (args.interval) {
 }
 
 async function execCmd() {
-  const authOpts = createAuthOpts();
+  const auth = getAuth();
   if (args['get-token']) {
-    const tokenObj = await new Auth(authOpts).authenticate();
+    const tokenObj = await auth.authenticate();
     return tokenObj.token;
   } else if (args['get-graph']) {
-    let auth;
-    if (args.token) {
-      auth = Auth.byToken(authOpts, args.token, args.tokenAt);
-    } else {
-      auth = await new Auth(authOpts);
-    }
     return new Graph(auth).getGraph();
+  } else if (args['get-os']) {
+    return new Info(auth).getOS();
   }
   throw new Error("I don't know what to do with your arguments, beep boop 🤔");
 }
